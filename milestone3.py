@@ -1,11 +1,31 @@
 import numpy as np
+from numpy.linalg import solve, norm
+from scipy.optimize import root
 import matplotlib.pyplot as plt
+
+# Configuración estilo
+plt.rcParams.update({
+    "text.usetex": False,
+    "font.family": "serif",
+    "font.serif": ["Computer Modern Roman", "Times New Roman", "DejaVu Serif"],
+    "mathtext.fontset": "cm",
+    "axes.formatter.use_mathtext": True,
+    "legend.fontsize": 16,
+    "axes.labelsize": 18,
+    "xtick.labelsize": 16,
+    "ytick.labelsize": 16,
+})
 
 def F(U, t):
     r = U[0:2]
     dr = U[2:4]
     norm_r = np.linalg.norm(r)
-    return np.concatenate([dr, -r / (norm_r**3)])
+    if norm_r < 1e-12:
+        # Evita división por cero
+        a = np.array([0.0, 0.0])
+    else:
+        a = -r / (norm_r**3)
+    return np.concatenate([dr, a])
 
 def Euler(F, U, t, dt):
     return U + dt * F(U, t)
@@ -29,13 +49,21 @@ def RK4(F, U, t, dt):
     return U + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
 
 def Inverse_Euler(F, U, t, dt, tol=1e-12, max_iter=50):
-    U_new = U.copy()
-    for _ in range(max_iter):
-        U_next = U + dt * F(U_new, t + dt)
-        if np.linalg.norm(U_next - U_new) < tol:
-            return U_next
-        U_new = U_next
-    raise RuntimeError(f"Euler implícito no convergió en {max_iter} iteraciones.")
+
+    def G(U_new):
+        return U_new - U - dt * F(U_new, t + dt)
+
+    U_guess = U + dt * F(U, t)
+
+    sol = root(G, U_guess, method='hybr', tol=tol)
+
+    if not sol.success:
+        sol = root(G, U_guess, method='lm')
+
+    if not sol.success:
+        raise RuntimeError(f"Inverse_Euler falló: {sol.message}")
+
+    return sol.x
 
 def Cauchy_Solver(F, U0, t0, tf, N, scheme):
     if N <= 0:
@@ -69,7 +97,7 @@ esquemas = {
     "RK4": RK4
 }
 
-N_vals = [125, 250, 500, 1000, 2000]
+N_vals = [125, 250, 500, 1000, 2000, 5000, 10000]
 
 errores = {nombre: [] for nombre in esquemas}
 pasos = {nombre: [] for nombre in esquemas}
@@ -103,20 +131,20 @@ for nombre in esquemas:
     # Calcular tasa de convergencia (pendiente en log-log)
     if len(err_vals) > 1:
         p = np.polyfit(np.log(dt_vals), np.log(err_vals), 1)[0]
-        plt.loglog(dt_vals, err_vals, 'o-', label=f"{nombre} (p≈{p:.2f})")
+        plt.loglog(dt_vals, err_vals, 'o-', label=f"{nombre} (p={p:.2f})")
     else:
         plt.loglog([], [], label=f"{nombre} (no converge)")
 
 # Líneas de referencia para órdenes 1, 2, 4
 dt_ref = np.array([1e-3, 1e-1])
-plt.loglog(dt_ref, dt_ref**1, 'k--', label="Orden 1")
+plt.loglog(dt_ref, dt_ref**1, 'm-.', label="Orden 1")
 plt.loglog(dt_ref, dt_ref**2, 'k-.', label="Orden 2")
-plt.loglog(dt_ref, dt_ref**4, 'k:', label="Orden 4")
+plt.loglog(dt_ref, dt_ref**4, '-.', label="Orden 4")
 
 plt.xlabel("dt")
-plt.ylabel("Error estimado (||U_2N - U_N||)")
+plt.ylabel("Error estimado " r'$(||U_{2N} - U_N||)$')
 plt.title("Tasa de convergencia")
 plt.legend()
-plt.grid(True, which="both", ls="--", alpha=0.5)
+plt.grid(True, which="both", ls="-", alpha=0.5)
 plt.tight_layout()
 plt.show()
