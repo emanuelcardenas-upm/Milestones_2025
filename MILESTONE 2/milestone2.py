@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from F import *
+from physics import *
 from temporal_schemes import *
 from Cauchy import *
 
@@ -13,7 +13,7 @@ tf = 10.0
 N = 1000
 
 # Lista de métodos y sus etiquetas
-metodos = [
+schemes = [
     (Euler, "Euler explícito"),
     (Crank_Nicolson, "Crank Nicolson"),
     (RK4, "RK4"),
@@ -22,7 +22,7 @@ metodos = [
 
 # Grafica
 
-for metodo, etiqueta in metodos:
+for metodo, etiqueta in schemes:
     t_vals, U_vals = Cauchy_Solver(F, U0, t0, tf, N, metodo)
     plt.plot(U_vals[:, 0], U_vals[:, 1], label=etiqueta)
 

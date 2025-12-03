@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from numpy import *
-from F import *
+from physics import *
 from temporal_schemes import *
 from Cauchy import *
 from convergence import *
@@ -42,8 +42,8 @@ def plot_convergence():
     logN, logE, q = convergence_rate(RK4, Oscilador, U0, t)   
 
     plt.plot(logN, logE)
-    plt.xlabel('logN')
-    plt.ylabel('logE')
+    plt.xlabel('log N')
+    plt.ylabel('log E')
     plt.title(f'El orden del esquema temporal es {q}')
     plt.grid(True)
     plt.show()
