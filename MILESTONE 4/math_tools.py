@@ -24,19 +24,6 @@ def Gauss(A, b):
 
     return solve(A, b)
 
-
-# def Newton(f, x0):
-
-#     x = x0
-#     dx = 1e-3
-
-#     while norm(dx) > 1e-10:
-#         A = Jacobian(f, x)
-#         dx = Gauss(A, -f(x))
-#         x = x + dx
-
-#     return x
-
 def Newton(f, x0, tol=1e-10, max_iter=50):
     x = x0.copy()
     for _ in range(max_iter):
