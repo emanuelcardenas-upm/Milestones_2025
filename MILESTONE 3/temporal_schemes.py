@@ -32,7 +32,7 @@ def RK4(U1, t1, t2, F):
 def Crank_Nicolson(U1, t1, t2, F):
 
     dt = t2 - t1
-    a = U1 + dt/2 * F(U1, t1) # Constant term
+    a = U1 + dt/2 * F(U1, t1)
 
     def G(x):
         return x - a - dt/2 * F(x, t2)
